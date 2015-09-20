@@ -1,0 +1,43 @@
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "groovy"
+
+version = '1.0'
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+repositories {
+  mavenCentral()
+
+  // Custom Nexus
+  maven { url "http://198.199.96.117:8081/nexus/content/groups/public" }
+}
+
+dependencies {
+  compile "org.codehaus.groovy:groovy-all:2.3.10"
+}
+
+task buildJar(type: Jar) {
+  from files(sourceSets.main.output)
+  /*
+  from {
+    configurations.compile.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+    configurations.runtime.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+  */
+  with jar
+
+  sourceSets.main.groovy {
+    srcDirs = ['src/main/groovy']
+  }
+
+  manifest {
+    attributes 'Implementation-Title': 'WMIO Utility',
+      'Implementation-Version': version
+  }
+}
