@@ -1,4 +1,4 @@
-package com.webmetaio.utility.converters
+package com.webmetaio.tools.converters
 
 
 class EmptyClassPropertyTypeResolver implements ClassPropertyTypeResolver {

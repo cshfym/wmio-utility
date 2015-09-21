@@ -15,7 +15,26 @@ repositories {
 }
 
 dependencies {
+
   compile "org.codehaus.groovy:groovy-all:2.3.10"
+
+  compile "org.springframework:spring-orm:4.2.1.RELEASE"
+  compile "org.springframework:spring-context:4.2.1.RELEASE"
+
+  compile "org.springframework.security:spring-security-core:4.0.2.RELEASE"
+  compile "org.springframework.security:spring-security-config:4.0.2.RELEASE"
+  compile "org.springframework.security:spring-security-web:4.0.2.RELEASE"
+
+
+  compile 'org.bouncycastle:bcprov-jdk15on:1.52'
+  compile 'org.jasypt:jasypt:1.9.2'
+
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.6.2'
+  compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.2'
+
+  compile 'log4j:log4j:1.2.16'
+  compile 'org.slf4j:jul-to-slf4j:1.7.12'
+
 }
 
 task buildJar(type: Jar) {
