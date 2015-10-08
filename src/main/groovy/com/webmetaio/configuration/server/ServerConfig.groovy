@@ -1,4 +1,7 @@
-package com.webmetaio.configuration.server
+package com.webmetaio.configuration.server;
+
+import com.typesafe.config.Config
+
 
 class ServerConfig {
 
@@ -8,40 +11,54 @@ class ServerConfig {
 
   HttpsConfig https
 
-  String name
-
-  List<Map> staticFiles
-
-  Properties accessLog
-
   boolean logPayloads = false
 
-  ServerConfig() {
-  }
+  boolean monitoringEnabled = false
 
-  ServerConfig(Map map) {
+  String name
 
-    if (map?.containsKey('http')) {
-      this.http = new HttpConfig(map.http)
-    }
-    if (map?.containsKey('https')) {
-      this.https = new HttpsConfig(map.https)
-    }
+  List<Config> staticFiles
 
-    if (map?.containsKey('staticFiles')) {
-      this.staticFiles = map.staticFiles
-    }
+  Config accessLog
 
-    if (map?.containsKey('env')) {
-      this.env = map.env
+
+  ServerConfig() { }
+
+  ServerConfig(Config config) {
+
+    if (!config) {
+      return
     }
 
-    if (map?.containsKey('accessLog')) {
-      this.accessLog = map.accessLog.toProperties()
+    if (config.hasPath('http')) {
+      this.http = new HttpConfig(config.getConfig('http'))
+    }
+    if (config.hasPath('https')) {
+      this.https = new HttpsConfig(config.getConfig('https'))
     }
 
-    if (map?.containsKey('logPayloads')) {
-      this.logPayloads = map.logPayloads.toBoolean()
+    if (config.hasPath('staticFiles')) {
+      this.staticFiles = config.getConfigList('staticFiles')
+    }
+
+    if (config.hasPath('env')) {
+      this.env = config.getConfig('env')
+    }
+
+    if (config.hasPath('name')) {
+      this.name = config.getString('name')
+    }
+
+    if (config.hasPath('accessLog')) {
+      this.accessLog = config.getConfig('accessLog')
+    }
+
+    if (config.hasPath('logPayloads')) {
+      this.logPayloads = config.getBoolean('logPayloads')
+    }
+
+    if (config.hasPath('monitoringEnabled')) {
+      this.monitoringEnabled = config.getBoolean('monitoringEnabled')
     }
 
   }
@@ -55,4 +72,3 @@ class ServerConfig {
   }
 
 }
-

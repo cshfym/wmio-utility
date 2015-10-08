@@ -1,7 +1,7 @@
 package com.webmetaio.configuration.server
 
+import com.typesafe.config.Config
 import groovy.util.logging.Slf4j
-
 
 @Slf4j
 class HttpConfig {
@@ -23,21 +23,21 @@ class HttpConfig {
   public HttpConfig() {
   }
 
-  public HttpConfig(Map map) {
+  public HttpConfig(Config config) {
 
-    assignBooleanProperty(map, 'enabled')
+    assignBooleanProperty(config, 'enabled')
 
     [
       'listeningHost',
       'contextPath'
-    ].each { assignStringProperty(map, it) }
+    ].each { assignStringProperty(config, it) }
 
     [
       'listeningPort': 'port',
       'corePoolSize' : null,
       'maxPoolSize': null,
       'queueLimit' : null,
-    ].each { key, prop -> assignIntegerProperty(map, key, prop) }
+    ].each { key, prop -> assignIntegerProperty(config, key, prop) }
 
   }
 
@@ -54,26 +54,21 @@ class HttpConfig {
     80
   }
 
-  protected void assignStringProperty(Map map, String name) {
-    if (map?.containsKey(name)) {
-      this."${name}" = map."${name}"
+  protected void assignStringProperty(Config config, String name) {
+    if (config?.hasPath(name)) {
+      this."${name}" = config.getString(name)
     }
   }
 
-  protected void assignIntegerProperty(Map map, String keyName, String propName = null) {
-    if (!map?.containsKey(keyName)) {
-      return
+  protected void assignIntegerProperty(Config config, String keyName, String propName = null) {
+    if (config?.hasPath(keyName)) {
+      this."${propName ?: keyName}" = config.getInt(keyName)
     }
-    if (!map."${keyName}".toString().isInteger()) {
-      log.error "Could not parse [${map."${keyName}"}] as valid ${propName ?: keyName}!"
-      return
-    }
-    this."${propName ?: keyName}" = map."${keyName}".toInteger()
   }
 
-  protected void assignBooleanProperty(Map map, String name) {
-    if (map?.containsKey(name)) {
-      this."${name}" = map."${name}" as boolean
+  protected void assignBooleanProperty(Config config, String name) {
+    if (config?.hasPath(name)) {
+      this."${name}" = config.getBoolean(name)
     }
   }
 

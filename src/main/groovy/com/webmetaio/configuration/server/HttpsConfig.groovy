@@ -1,6 +1,9 @@
 package com.webmetaio.configuration.server
 
+import com.typesafe.config.Config
 import groovy.util.logging.Slf4j
+import org.springframework.core.io.DefaultResourceLoader
+import org.springframework.core.io.Resource
 
 @Slf4j
 class HttpsConfig extends HttpConfig {
@@ -16,9 +19,9 @@ class HttpsConfig extends HttpConfig {
 
   private static final List<String> PROTOCOLS = ['TLSv1.2', 'TLSv1.1', 'TLSv1']
 
-  List<String> additionalCipherSuites
+  List<String> overrideCipherSuites
 
-  List<String> additionalProtocols
+  List<String> overrideProtocols
 
   byte[] keystoreContent
 
@@ -43,61 +46,71 @@ class HttpsConfig extends HttpConfig {
   public HttpsConfig() {
   }
 
-  public HttpsConfig(Map map) {
+  public HttpsConfig(Config config) {
 
-    super(map)
+    super(config)
 
     [
       'keystoreFile': 'keystoreContent',
       'truststoreFile': 'truststoreContent'
-    ].each { key, prop -> assignFileContentProperty(map, key, prop) }
+    ].each { key, prop -> assignFileContentProperty(config, key, prop) }
 
     [
       'keystorePassphrase',
       'keystoreType',
       'truststorePassphrase',
       'truststoreType'
-    ].each { assignStringProperty(map, it) }
+    ].each { assignStringProperty(config, it) }
 
     [
       'clientMode',
       'wantClientAuth',
       'needClientAuth'
-    ].each { assignBooleanProperty(map, it) }
+    ].each { assignBooleanProperty(config, it) }
 
     [
-      'additionalCipherSuites',
-      'additionalProtocols'
-    ].each { assignCommaSeparatedListProperty(map, it) }
+      'overrideCipherSuites',
+      'overrideProtocols'
+    ].each { assignCommaSeparatedListProperty(config, it) }
 
   }
 
   public String[] getCipherSuites() {
-    (CIPHER_SUITES + (additionalCipherSuites ?: [])).toArray(new String[0])
+    (overrideCipherSuites ?: CIPHER_SUITES).toArray(new String[0])
   }
 
   public String[] getProtocols() {
-    (PROTOCOLS + (additionalProtocols ?: [])).toArray(new String[0])
+    (overrideProtocols ?: PROTOCOLS).toArray(new String[0])
   }
 
-  protected byte[] loadStoreContents(filename){
-    def file = new File(filename)
-    if (file.exists() && file.canRead()) {
-      return file.bytes
+  protected static byte[] loadStoreContents(String filename) {
+
+    Resource resource = new DefaultResourceLoader().getResource(filename)
+
+    if (resource.exists() && resource.readable) {
+      return resource.inputStream.bytes
     } else {
-      log.error "Could not read keystore file [${filename}]"
+      File file = new File(filename)
+      if (file.exists() && file.canRead()) {
+        return new FileInputStream(file).bytes
+      }
+      log.error "File [${filename}] to be loaded as keystore cannot be read or does not exist"
+    }
+
+  }
+
+  protected void assignCommaSeparatedListProperty(Config config, String name) {
+    if (config?.hasPath(name)) {
+      this."${name}" = config.getStringList(name).collect { it.trim() }
     }
   }
 
-  protected void assignCommaSeparatedListProperty(Map map, String name) {
-    if (map?.containsKey(name)) {
-      this."${name}" = map."${name}".split(',').collect { it.trim() }
-    }
-  }
-
-  protected void assignFileContentProperty(Map map, String keyName, String propName = null) {
-    if (map?.containsKey(keyName)) {
-      this."${propName ?: keyName}" = loadStoreContents(map."${keyName}" as String)
+  protected void assignFileContentProperty(Config config, String keyName, String propName = null) {
+    if (config?.hasPath(keyName)) {
+      String fileName = config.getString(keyName)
+      String propertyName = propName ?: keyName
+      log.info "Loading file [${fileName}] for property [${propertyName}]"
+      this."${propertyName}" = loadStoreContents(fileName)
     }
   }
 
